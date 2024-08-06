@@ -21,7 +21,7 @@ func Test_home(t *testing.T) {
 		{"not found", "/dog", http.StatusNotFound},
 	}
 
-	app := &handler{}
+	var app handler
 	app.router = gin.Default()
 	app.router.GET("/", app.home)
 	pathToTemplates = "./../../templates/"

@@ -11,26 +11,30 @@ import (
 
 type contextKey string
 
-var contextUserKey contextKey
+var contextUserKey contextKey = "user_ip"
 
 // returns the value stored in context
 func (h *handler) ipFromContext(ctx context.Context) string {
-	return ctx.Value(contextUserKey).(string)
+	ip, ok := ctx.Value(contextUserKey).(string)
+	if !ok || ip == "" {
+		return "unknown" // Return a default value or handle it accordingly
+	}
+	return ip
 }
 
 func (h *handler) addIpToContext() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-
+		cx := ctx.Request.Context()
 		userIP, err := getIP(ctx.Request)
 		if err != nil {
 			IP, _, _ := net.SplitHostPort(ctx.Request.RemoteAddr)
 			if len(IP) == 0 {
 				IP = "unknown"
 			}
-			ctx.Request = ctx.Request.WithContext(context.WithValue(ctx.Request.Context(), contextUserKey, IP))
+			cx = context.WithValue(cx, contextUserKey, IP)
 		}
-		ctx.Request = ctx.Request.WithContext(context.WithValue(ctx.Request.Context(), contextUserKey, userIP))
-
+		cx = context.WithValue(cx, contextUserKey, userIP)
+		ctx.Request = ctx.Request.WithContext(cx)
 		ctx.Next()
 	}
 }
