@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/http/httptest"
 	"testing"
 
@@ -69,6 +70,20 @@ func Test_addIpToContext(t *testing.T) {
 		// Serve the request
 		app.router.ServeHTTP(w, req)
 
+	}
+
+}
+
+func Test_ipFromContext(t *testing.T) {
+
+	var app handler
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, contextUserKey, "whatever")
+	expectedIP := ctx.Value(contextUserKey)
+	gottenip := app.ipFromContext(ctx)
+	t.Log(gottenip)
+	if expectedIP != gottenip {
+		t.Errorf("expected %v but got %v", expectedIP, gottenip)
 	}
 
 }
