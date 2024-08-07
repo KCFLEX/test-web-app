@@ -11,7 +11,7 @@ import (
 
 type contextKey string
 
-var contextUserKey contextKey = "user_ip"
+var contextUserKey contextKey
 
 // returns the value stored in context
 func (h *handler) ipFromContext(ctx context.Context) string {
