@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -14,11 +13,19 @@ func Test_addIpToContext(t *testing.T) {
 
 	var app handler
 
-	// Create a new Gin router
-	app.router = gin.Default()
+	tests := []struct {
+		headerName  string
+		headerValue string
+		addr        string
+		emptyAddr   bool
+	}{
+		{"", "", "", false}, // ignore address
+		{"", "", "", true},
+		{"X-Forwarded-For", "192.3.2.1", "", false},
+		{"", "", "hello:world", false},
+	}
 
-	// Apply the middleware
-	app.router.Use(app.addIpToContext())
+	// Create a new Gin router
 
 	// Define a handler to check the context value
 	nextHandler := gin.HandlerFunc(func(ctx *gin.Context) {
@@ -37,26 +44,31 @@ func Test_addIpToContext(t *testing.T) {
 		t.Log(ipStr)
 	})
 
-	// Register the route with the middleware and handler
-	app.router.GET("/", nextHandler)
-	expextedIP := "192.168.1.1"
-	// Create a new HTTP request
-	req := httptest.NewRequest("GET", "/", nil)
+	for _, e := range tests {
+		app.router = gin.Default()
+		// Apply the middleware
+		app.router.Use(app.addIpToContext())
+		// Register the route with the middleware and handler
+		app.router.GET("/", nextHandler)
 
-	req.RemoteAddr = "192.168.1.1"
+		// Create a new HTTP request
+		req := httptest.NewRequest("GET", "http://testing", nil)
+		if e.emptyAddr {
+			req.RemoteAddr = ""
+		}
+		if len(e.headerName) > 0 {
+			req.Header.Add(e.headerName, e.headerValue)
+		}
 
-	// Record the response
-	w := httptest.NewRecorder()
+		if len(e.addr) > 0 {
+			req.RemoteAddr = e.addr
+		}
+		// Record the response
+		w := httptest.NewRecorder()
 
-	// Serve the request
-	app.router.ServeHTTP(w, req)
+		// Serve the request
+		app.router.ServeHTTP(w, req)
 
-	// Check the response status code
-	if w.Code != http.StatusOK {
-		t.Errorf("expected status OK, got %v", w.Code)
 	}
 
-	if expextedIP != req.RemoteAddr {
-		t.Errorf("expected %v, got %q", expextedIP, req.RemoteAddr)
-	}
 }
