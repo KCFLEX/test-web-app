@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -38,4 +39,19 @@ func (h *handler) render(ctx *gin.Context, filename string, data *PageData) erro
 	}
 
 	return nil
+}
+
+// stub Handler
+
+func (h *handler) login(ctx *gin.Context) {
+	err := ctx.Request.ParseForm()
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"Bad request": err.Error()})
+	}
+
+	email := ctx.Request.Form.Get("email")
+	password := ctx.Request.Form.Get("password")
+
+	log.Println(email, password)
+	fmt.Fprint(ctx.Writer, password)
 }

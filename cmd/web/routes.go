@@ -21,6 +21,7 @@ func (h *handler) registerRoutes() {
 
 	h.router.GET("/", h.home)
 	h.router.Static("/static", "./static")
+	h.router.POST("/login", h.login)
 
 }
 
